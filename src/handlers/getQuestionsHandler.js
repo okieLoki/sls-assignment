@@ -1,10 +1,10 @@
-const connectToDatabase = require('./db/connecttodb')
-const Question = require("./models/questions");
+const connectToDatabase = require('../utils/dbConnection')
+const Question = require("../models/questions");
 const createError = require('http-errors');
-const getQuestionsSchema = require('./schema/getQuestionsSchema')
+const getQuestionsSchema = require('../schema/getQuestionsSchema')
 const { transpileSchema } = require('@middy/validator/transpile')
 const validator = require('@middy/validator')
-const commonMiddleware = require('./utils/commonMiddleware')
+const commonMiddleware = require('../utils/commonMiddleware')
 
 
 const getQuestions = async (event) => {

@@ -1,14 +1,15 @@
 
 const AWS = require("aws-sdk");
-const s3 = new AWS.S3();
-const connectToDB = require('./db/connecttodb')
-const Response = require('./models/response');
-const commonMiddleware = require('./utils/commonMiddleware')
+const connectToDB = require('../utils/dbConnection')
+const Response = require('../models/response');
+const commonMiddleware = require('../utils/commonMiddleware')
 const createError = require('http-errors')
 const { transpileSchema } = require('@middy/validator/transpile')
+const Question = require('../models/questions');
 const validator = require('@middy/validator')
-const submitExamSchemaS3 = require('./schema/submitExamSchemaS3')
+const submitExamSchemaS3 = require('../schema/submitExamSchemaS3')
 
+const s3 = new AWS.S3();
 const BUCKET_NAME = 'descriptive-ans-upload-okieloki';
 
 const examSubmitS3 = async (event) => {
@@ -22,10 +23,16 @@ const examSubmitS3 = async (event) => {
     };
 
     try {
-        connectToDB();
+        await connectToDB();
 
         const studentID = event.requestContext.authorizer.email;
         const data = event.body;
+
+        const question = await Question.find({
+            questionID: data.questionID,
+        })
+
+        if (question.length === 0) throw new createError.BadRequest('Invalid Question ID');
 
         const check = await Response.find({
             questionID: data.questionID,
@@ -61,7 +68,7 @@ const examSubmitS3 = async (event) => {
     } catch (error) {
         response.body = JSON.stringify({
             message: "File failed to upload",
-            errorMessage: error.message
+            errorMessage: error.message,
         });
         response.statusCode = error.statusCode || 500;
     }

@@ -1,19 +1,24 @@
-const connectToDatabase = require('./db/connecttodb');
-const Response = require('./models/response');
-const commonMiddleware = require('./utils/commonMiddleware')
+const connectToDatabase = require('../utils/dbConnection');
+const Response = require('../models/response');
+const Question = require('../models/questions');
+const commonMiddleware = require('../utils/commonMiddleware')
 const createError = require('http-errors')
 const { transpileSchema } = require('@middy/validator/transpile')
 const validator = require('@middy/validator')
-const submitExamSchema = require('./schema/submitExamSchema')
+const submitExamSchema = require('../schema/submitExamSchema')
 
 const submitExam = async (event) => {
 
-  connectToDatabase();
+  await connectToDatabase();
 
   const inputdata = event.body
   const studentID = event.requestContext?.authorizer?.email;
 
-  console.log(event.requestContext.authorizer.email)
+  const question = await Question.find({
+    questionID: inputdata?.questionID,
+  })
+
+  if (!question) throw new createError.BadRequest('Invalid Question ID');
 
   const check = await Response.find({
     questionID: inputdata.questionID,
@@ -40,7 +45,8 @@ const submitExam = async (event) => {
       statusCode: 200,
       body: JSON.stringify(savedtodb),
     };
-  } else if (inputdata.responsetype === 'descriptive') {
+  }
+  else if (inputdata.responsetype === 'descriptive') {
     const savetodb = new Response({
       teacherID: inputdata.teacherID,
       questionID: inputdata.questionID,

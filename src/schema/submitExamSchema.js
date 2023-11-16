@@ -16,16 +16,13 @@ const schema = {
                 },
                 response: {
                     type: 'string',
-                    enum: ['a', 'b', 'c', 'd']
                 },
-                descriptiveresponse: {
-                    type: 'string'
-                }
             },
             required: [
                 'teacherID',
                 'questionID',
                 'responsetype',
+                'response'
             ]
         }
     },

@@ -16,7 +16,7 @@ provider:
 
 functions:
   post-questions:
-    handler: src/post-questions.handler
+    handler: src/handlers/postQuestionHandler.handler
     events:
       - http:
           method: POST
@@ -24,27 +24,28 @@ functions:
           authorizer: arn:aws:lambda:us-east-1:587592461836:function:auth-question-dev-auth
 
   get-questions:
-    handler: src/get-questions.handler
+    handler: src/handlers/getQuestionsHandler.handler
     events:
       - http:
           method: GET
           path: /exam
 
   exam-submit-s3:
-    handler: src/exam-submit-s3.handler
+    handler: src/handlers/examSubmitS3Handler.handler
     events:
       - http:
           method: POST
-          path: /exam-submit/s3
+          path: /exam/submit/s3
           authorizer: arn:aws:lambda:us-east-1:587592461836:function:auth-question-dev-auth
 
   exam-submit:
-    handler: src/exam-submit.handler
+    handler: src/handlers/examSubmitHandler.handler
     events:
       - http:
           method: POST
           path: /exam/submit
           authorizer: arn:aws:lambda:us-east-1:587592461836:function:auth-question-dev-auth
+  
 
 resources:
   Resources:
