@@ -1,0 +1,61 @@
+service: question
+
+frameworkVersion: "3"
+
+
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  stage: dev
+  region: us-east-1
+  iam:
+    role: 
+      statements:
+        - Effect: Allow
+          Action: s3:*
+          Resource: '*'
+ 
+
+
+functions:
+  post-questions:
+    handler: src/post-questions.handler
+    events:
+      - http:
+          method: POST
+          path: /question
+          authorizer: arn:aws:lambda:us-east-1:587592461836:function:auth-question-dev-auth
+  get-questions:
+    handler: src/get-questions.handler
+    events:
+      - http:
+          method: GET
+          path: /exam 
+          
+  exam-submit-s3:
+    handler: src/exam-submit-s3.handler
+    events:
+      - http:
+          method: POST
+          path: /exam-submit/s3  
+          authorizer: arn:aws:lambda:us-east-1:587592461836:function:auth-question-dev-auth
+  exam-submit:
+    handler: src/exam-submit.handler
+    events:
+      - http:
+          method: POST
+          path: /exam-submit 
+          authorizer: arn:aws:lambda:us-east-1:587592461836:function:auth-question-dev-auth             
+resources:
+  Resources:                    
+    descriptiveAnswerUpload:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: descriptive-ans-upload-okieloki
+        AccessControl: PublicRead
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: false
+          BlockPublicPolicy: false
+          IgnorePublicAcls: false
+          RestrictPublicBuckets: false
