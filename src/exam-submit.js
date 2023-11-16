@@ -1,82 +1,78 @@
-const z = require('zod')
-const conns = require('./db/connecttodb')
+const connectToDB = require('./db/connecttodb')
 const Response = require('./models/response');
 const commonMiddleware = require('./utils/commonMiddleware')
-
-const zodinput = z.object({
-   teacherID: z.string(),
-   questionID: z.string(),
-   responsetype: z.string()
-})
+const { transpileSchema } = require('@middy/validator/transpile')
+const validator = require('@middy/validator')
+const submitExamSchema = require('./schema/submitExamSchema')
+const createError = require('http-errors')
 
 const examSubmit = async (event) => {
 
   try {
-    conns()
-   const inputdata = JSON.parse(event.body);
-   const studentID = event.requestContext.authorizer.email;
-   
-   const parsed = zodinput.safeParse(inputdata);
-        
-        if(!parsed.data){
-          return{
-            statusCode: 400,
-            body : 'enter valid inputs'
-          }
-        }
-        
 
-       const check= await Response.find({questionID:parsed.data.questionID,studentID}).limit(1);
-       
-       if(check.length!==0){
-        return{
-          statusCode: 400,
-          body : ' answer already exists'
-        }
-       } 
-    if(parsed.data.responsetype==='MCQ'){
-      
-        const savetodb = new Response({
-            teacherID: parsed.data.teacherID,
-            questionID: parsed.data.questionID,
-            studentID,
-            responsetype:'MCQ',
-            response: inputdata.response
-        })
+    connectToDB()
 
-        const savedtodb = await savetodb.save();
-        console.log(savedtodb)
-        return {
-            statusCode:200,
-            body : JSON.stringify(savedtodb)
-        }
+    const inputdata = event.body;
+    const studentID = event.requestContext.authorizer.email;
 
-    } else if(parsed.data.responsetype==="descriptive") {
-      
-        const savetodb = new Response({
-            teacherID: parsed.data.teacherID,
-            questionID: parsed.data.questionID,
-            studentID,
-            responsetype:'MCQ',
-            descriptiveresponse: inputdata.response
-        })
-        const savedtodb = await savetodb.save();
-        return {
-            statusCode:200,
-            body : JSON.stringify(savedtodb)
-        }
+    const check = await Response.find({
+      questionID: inputdata.questionID,
+      studentID
+    }).limit(1);
+
+    if (check.length !== 0) {
+      throw new createError.Forbidden('You have already submitted your response')
     }
-    return {
-      statusCode:300,
-      body: 'error'
+
+    if (inputdata.responsetype === 'MCQ') {
+
+      const savetodb = new Response({
+        teacherID: inputdata.teacherID,
+        questionID: inputdata.questionID,
+        studentID,
+        responsetype: 'MCQ',
+        response: inputdata.response
+      })
+
+      const savedtodb = await savetodb.save();
+
+      return {
+        statusCode: 200,
+        body: JSON.stringify(savedtodb)
+      }
+
+    } else if (inputdata.responsetype === "descriptive") {
+
+      const savetodb = new Response({
+        teacherID: inputdata.teacherID,
+        questionID: inputdata.questionID,
+        studentID,
+        responsetype: 'MCQ',
+        descriptiveresponse: inputdata.response
+      })
+      const savedtodb = await savetodb.save();
+      return {
+        statusCode: 200,
+        body: JSON.stringify(savedtodb)
+      }
     }
 
   } catch (error) {
+
     return {
-        statusCode: 500,
-        body : 'internal server error'
+      statusCode: error.statusCode || 500,
+      body: error.message || 'Internal server error'
     }
   }
 };
 
 module.exports.handler = commonMiddleware(examSubmit)
+  .use(
+    validator({
+      eventSchema: transpileSchema(submitExamSchema),
+      ajvOptions: {
+        useDefaults: true,
+        strict: false
+      }
+    })
+  )
