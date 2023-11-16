@@ -9,43 +9,34 @@ const commonMiddleware = require('./utils/commonMiddleware')
 
 const getQuestions = async (event) => {
 
-  try {
-    connectToDatabase();
+  connectToDatabase();
 
-    const id = event.queryStringParameters.id;
+  const id = event.queryStringParameters.id;
 
-    const countMCQ = Math.floor(Math.random() * 10);
-    const countDesc = 10 - countMCQ;
+  const countMCQ = Math.floor(Math.random() * 10);
+  const countDesc = 10 - countMCQ;
 
-    const MCQS = await Question.find({
-      responsetype: 'MCQ',
-      teacherID: id
-    }).limit(countMCQ)
+  const MCQS = await Question.find({
+    responsetype: 'MCQ',
+    teacherID: id
+  }).limit(countMCQ)
 
-    const DESC = await Question.find({
-      responsetype: 'descriptive',
-      teacherID: id
-    }).limit(countDesc)
+  const DESC = await Question.find({
+    responsetype: 'descriptive',
+    teacherID: id
+  }).limit(countDesc)
 
-    const questionpaper = await MCQS.concat(DESC);
+  const questionpaper = await MCQS.concat(DESC);
 
-    if (questionpaper.length === 0) {
-      throw createError.NotFound('No Questions Found')
-    }
-
-    return {
-      statusCode: 200,
-      body: JSON.stringify(questionpaper),
-    };
-
-  } catch (error) {
-
-    return {
-      statusCode: error.statusCode || 500,
-      body: error.message || 'Internal server error'
-    }
-
+  if (questionpaper.length === 0) {
+    throw createError.NotFound('No Questions Found')
   }
+
+  return {
+    statusCode: 200,
+    body: JSON.stringify(questionpaper),
+  };
+
 }
 
 module.exports.handler = commonMiddleware(getQuestions)

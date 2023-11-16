@@ -8,7 +8,8 @@ const schema = {
                     type: 'string'
                 },
                 responsetype: {
-                    type: 'string'
+                    type: 'string',
+                    enum: ['MCQ', 'descriptive']
                 },
                 options: {
                     type: 'array',
@@ -17,25 +18,10 @@ const schema = {
                     }
                 }
             },
-            required: ['title', 'responsetype', 'options']
-        },
-        requestContext: {
-            type: 'object',
-            properties: {
-                authorizer: {
-                    type: 'object',
-                    properties: {
-                        email: {
-                            type: 'string'
-                        }
-                    },
-                    required: ['email']
-                }
-            },
-            required: ['authorizer']
-        },
+            required: ['title', 'responsetype']
+        }
     },
-    required: ['body', 'requestContext']
+    required: ['body']
 }
 
 module.exports = schema;

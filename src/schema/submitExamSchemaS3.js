@@ -10,28 +10,18 @@ const schema = {
                 questionID: {
                     type: 'string'
                 },
-                responsetype: {
-                    type: 'string',
-                    enum: ['MCQ', 'descriptive']
-                },
-                response: {
-                    type: 'string',
-                    enum: ['a', 'b', 'c', 'd']
-                },
-                descriptiveresponse: {
+                file: {
                     type: 'string'
                 }
             },
             required: [
                 'teacherID',
                 'questionID',
-                'responsetype',
+                'file'
             ]
         }
     },
-    required: [
-        'body'
-    ]
+    required: ['body']
 }
 
 module.exports = schema;
